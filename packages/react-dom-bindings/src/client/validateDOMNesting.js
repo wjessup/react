@@ -364,71 +364,56 @@ function isTagValidWithParent(tag: string, parentTag: ?string): boolean {
 /**
  * Returns whether
  */
-function findInvalidAncestorForTag(
+function determineValidAncestorForTag(
   tag: string,
-  ancestorInfo: AncestorInfoDev,
-): ?Info {
-  switch (tag) {
-    case 'address':
-    case 'article':
-    case 'aside':
-    case 'blockquote':
-    case 'center':
-    case 'details':
-    case 'dialog':
-    case 'dir':
-    case 'div':
-    case 'dl':
-    case 'fieldset':
-    case 'figcaption':
-    case 'figure':
-    case 'footer':
-    case 'header':
-    case 'hgroup':
-    case 'main':
-    case 'menu':
-    case 'nav':
-    case 'ol':
-    case 'p':
-    case 'section':
-    case 'summary':
-    case 'ul':
-    case 'pre':
-    case 'listing':
-    case 'table':
-    case 'hr':
-    case 'xmp':
-    case 'h1':
-    case 'h2':
-    case 'h3':
-    case 'h4':
-    case 'h5':
-    case 'h6':
-      return ancestorInfo.pTagInButtonScope;
-
-    case 'form':
-      return ancestorInfo.formTag || ancestorInfo.pTagInButtonScope;
-
-    case 'li':
-      return ancestorInfo.listItemTagAutoclosing;
-
-    case 'dd':
-    case 'dt':
-      return ancestorInfo.dlItemTagAutoclosing;
-
-    case 'button':
-      return ancestorInfo.buttonTagInScope;
-
-    case 'a':
-      // Spec says something about storing a list of markers, but it sounds
-      // equivalent to this check.
-      return ancestorInfo.aTagInScope;
-
-    case 'nobr':
-      return ancestorInfo.nobrTagInScope;
-  }
-
-  return null;
+  ancestorInfo: AncestorInfo,
+): Info | null {
+  const ancestorInfoMap = new Map<string, Info>([
+    ['address', ancestorInfo.hasValidPTagInButtonScope],
+    ['article', ancestorInfo.hasValidPTagInButtonScope],
+    ['aside', ancestorInfo.hasValidPTagInButtonScope],
+    ['blockquote', ancestorInfo.hasValidPTagInButtonScope],
+    ['center', ancestorInfo.hasValidPTagInButtonScope],
+    ['details', ancestorInfo.hasValidPTagInButtonScope],
+    ['dialog', ancestorInfo.hasValidPTagInButtonScope],
+    ['dir', ancestorInfo.hasValidPTagInButtonScope],
+    ['div', ancestorInfo.hasValidPTagInButtonScope],
+    ['dl', ancestorInfo.hasValidPTagInButtonScope],
+    ['fieldset', ancestorInfo.hasValidPTagInButtonScope],
+    ['figcaption', ancestorInfo.hasValidPTagInButtonScope],
+    ['figure', ancestorInfo.hasValidPTagInButtonScope],
+    ['footer', ancestorInfo.hasValidPTagInButtonScope],
+    ['header', ancestorInfo.hasValidPTagInButtonScope],
+    ['hgroup', ancestorInfo.hasValidPTagInButtonScope],
+    ['main', ancestorInfo.hasValidPTagInButtonScope],
+    ['menu', ancestorInfo.hasValidPTagInButtonScope],
+    ['nav', ancestorInfo.hasValidPTagInButtonScope],
+    ['ol', ancestorInfo.hasValidPTagInButtonScope],
+    ['p', ancestorInfo.hasValidPTagInButtonScope],
+    ['section', ancestorInfo.hasValidPTagInButtonScope],
+    ['summary', ancestorInfo.hasValidPTagInButtonScope],
+    ['ul', ancestorInfo.hasValidPTagInButtonScope],
+    ['pre', ancestorInfo.hasValidPTagInButtonScope],
+    ['listing', ancestorInfo.hasValidPTagInButtonScope],
+    ['table', ancestorInfo.hasValidPTagInButtonScope],
+    ['hr', ancestorInfo.hasValidPTagInButtonScope],
+    ['xmp', ancestorInfo.hasValidPTagInButtonScope],
+    ['h1', ancestorInfo.hasValidPTagInButtonScope],
+    ['h2', ancestorInfo.hasValidPTagInButtonScope],
+    ['h3', ancestorInfo.hasValidPTagInButtonScope],
+    ['h4', ancestorInfo.hasValidPTagInButtonScope],
+    ['h5', ancestorInfo.hasValidPTagInButtonScope],
+    ['h6', ancestorInfo.hasValidPTagInButtonScope],
+    ['form', ancestorInfo.formTag?.ancestorInfo ?? ancestorInfo.hasValidPTagInButtonScope],
+    ['li', ancestorInfo.listItemTagAutoclosing.ancestorInfo],
+    ['dd', ancestorInfo.dlItemTagAutoclosing.ancestorInfo],
+    ['dt', ancestorInfo.dlItemTagAutoclosing.ancestorInfo],
+    ['button', ancestorInfo.buttonTagInScope.ancestorInfo],
+    ['a', ancestorInfo.aTagInScope.ancestorInfo],
+    ['nobr', ancestorInfo.nobrTagInScope.ancestorInfo],
+  ]);
+  
+  return ancestorInfoMap.get(tag.toLowerCase()) ?? null;
 }
 
 const didWarn: {[string]: boolean} = {};
