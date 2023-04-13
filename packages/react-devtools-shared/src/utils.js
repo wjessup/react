@@ -557,90 +557,37 @@ export type DataType =
 /**
  * Get a enhanced/artificial type string based on the object instance
  */
-export function getDataType(data: Object): DataType {
-  if (data === null) {
-    return 'null';
-  } else if (data === undefined) {
-    return 'undefined';
-  }
+export type DataType = 'null' | 'undefined' | 'react_element' | 'html_element' | 'bigint' | 'boolean' 
+    | 'function' | 'nan' | 'infinity' | 'array' | 'typed_array' | 'data_view' | 'array_buffer' 
+    | 'opaque_iterator' | 'iterator' | 'regexp' | 'date' | 'html_all_collection'
+    | 'class_instance' | 'object' | 'string' | 'symbol' | 'unknown';
 
-  if (isElement(data)) {
-    return 'react_element';
-  }
-
-  if (typeof HTMLElement !== 'undefined' && data instanceof HTMLElement) {
-    return 'html_element';
-  }
-
-  const type = typeof data;
-  switch (type) {
-    case 'bigint':
-      return 'bigint';
-    case 'boolean':
-      return 'boolean';
-    case 'function':
-      return 'function';
-    case 'number':
-      if (Number.isNaN(data)) {
-        return 'nan';
-      } else if (!Number.isFinite(data)) {
-        return 'infinity';
-      } else {
-        return 'number';
-      }
-    case 'object':
-      if (isArray(data)) {
-        return 'array';
-      } else if (ArrayBuffer.isView(data)) {
-        return hasOwnProperty.call(data.constructor, 'BYTES_PER_ELEMENT')
-          ? 'typed_array'
-          : 'data_view';
-      } else if (data.constructor && data.constructor.name === 'ArrayBuffer') {
-        // HACK This ArrayBuffer check is gross; is there a better way?
-        // We could try to create a new DataView with the value.
-        // If it doesn't error, we know it's an ArrayBuffer,
-        // but this seems kind of awkward and expensive.
-        return 'array_buffer';
-      } else if (typeof data[Symbol.iterator] === 'function') {
-        const iterator = data[Symbol.iterator]();
-        if (!iterator) {
-          // Proxies might break assumptoins about iterators.
-          // See github.com/facebook/react/issues/21654
-        } else {
-          return iterator === data ? 'opaque_iterator' : 'iterator';
-        }
-      } else if (data.constructor && data.constructor.name === 'RegExp') {
-        return 'regexp';
-      } else {
-        // $FlowFixMe[method-unbinding]
-        const toStringValue = Object.prototype.toString.call(data);
-        if (toStringValue === '[object Date]') {
-          return 'date';
-        } else if (toStringValue === '[object HTMLAllCollection]') {
-          return 'html_all_collection';
-        }
-      }
-
-      if (!isPlainObject(data)) {
-        return 'class_instance';
-      }
-
-      return 'object';
-    case 'string':
-      return 'string';
-    case 'symbol':
-      return 'symbol';
-    case 'undefined':
-      if (
-        // $FlowFixMe[method-unbinding]
-        Object.prototype.toString.call(data) === '[object HTMLAllCollection]'
-      ) {
-        return 'html_all_collection';
-      }
-      return 'undefined';
-    default:
-      return 'unknown';
-  }
+function getDataType<T>(data: T): DataType {
+    const typeName = typeof data;
+    switch (typeName) {
+        case 'null':
+        case 'undefined':
+        case 'string':
+        case 'number':
+        case 'boolean':
+        case 'function':
+        case 'symbol':
+            return typeName as DataType;
+        case 'object':
+            if(data===null) return 'null';
+            if (Array.isArray(data) || ArrayBuffer.isView(data)) return Array.isArray(data) ? 'array' : (data.constructor && data.constructor.BYTES_PER_ELEMENT) ? 'typed_array' : 'data_view';
+            if(data instanceof HTMLElement) return 'html_element';
+            if(data instanceof BigInt) return 'bigint';
+            if(data instanceof RegExp) return 'regexp';
+            if(data instanceof Date) return 'date';
+            if(data.constructor && data.constructor.name === "Set") return 'set';
+            if(data.constructor && data.constructor.name === "Map") return 'map';
+            if(data[Symbol.iterator]) return data.constructor.name==='GeneratorFunction'? 'iterator' : 'object';
+            if(['String', 'Number', 'Boolean', 'Symbol'].indexOf(data.constructor.name)>=0) return getDataType(data.valueOf());
+            return 'class_instance'
+        default:
+            return 'unknown';
+    }
 }
 
 export function getDisplayNameForReactElement(
