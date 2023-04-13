@@ -364,71 +364,78 @@ function isTagValidWithParent(tag: string, parentTag: ?string): boolean {
 /**
  * Returns whether
  */
-function findInvalidAncestorForTag(
-  tag: string,
-  ancestorInfo: AncestorInfoDev,
-): ?Info {
-  switch (tag) {
-    case 'address':
-    case 'article':
-    case 'aside':
-    case 'blockquote':
-    case 'center':
-    case 'details':
-    case 'dialog':
-    case 'dir':
-    case 'div':
-    case 'dl':
-    case 'fieldset':
-    case 'figcaption':
-    case 'figure':
-    case 'footer':
-    case 'header':
-    case 'hgroup':
-    case 'main':
-    case 'menu':
-    case 'nav':
-    case 'ol':
-    case 'p':
-    case 'section':
-    case 'summary':
-    case 'ul':
-    case 'pre':
-    case 'listing':
-    case 'table':
-    case 'hr':
-    case 'xmp':
-    case 'h1':
-    case 'h2':
-    case 'h3':
-    case 'h4':
-    case 'h5':
-    case 'h6':
-      return ancestorInfo.pTagInButtonScope;
+/**
+ * Finds an invalid ancestor for a given tag based on ancestorInfo.
+ * @param {string} tag - The tag to check for invalid ancestor.
+ * @param {Object} ancestorInfo - Information about the ancestor elements.
+ * @return {Object|null} The invalid ancestor if found or null if not.
+ */
+function findInvalidAncestorForTag(tag, ancestorInfo) {
+  // Define a map of valid tags.
+  const validTagsMap = new Map([
+    ['address', 1],
+    ['article', 2],
+    ['aside', 3],
+    ['blockquote', 4],
+    ['center', 5],
+    ['details', 6],
+    ['dialog', 7],
+    ['dir', 8],
+    ['div', 9],
+    ['dl', 10],
+    ['fieldset', 11],
+    ['figcaption', 12],
+    ['figure', 13],
+    ['footer', 14],
+    ['header', 15],
+    ['hgroup', 16],
+    ['main', 17],
+    ['menu', 18],
+    ['nav', 19],
+    ['ol', 20],
+    ['p', 21],
+    ['section', 22],
+    ['summary', 23],
+    ['ul', 24],
+    ['pre', 25],
+    ['listing', 26],
+    ['table', 27],
+    ['hr', 28],
+    ['xmp', 29],
+    ['h1', 30],
+    ['h2', 31],
+    ['h3', 32],
+    ['h4', 33],
+    ['h5', 34],
+    ['h6', 35],
+    ['form', 36],
+    ['li', 37],
+    ['dd', 38],
+    ['dt', 39],
+    ['button', 40],
+    ['a', 41],
+    ['nobr', 42],
+  ]);
 
-    case 'form':
-      return ancestorInfo.formTag || ancestorInfo.pTagInButtonScope;
+  // Find the target tag in the map.
+  const validTag = validTagsMap.get(tag);
 
-    case 'li':
-      return ancestorInfo.listItemTagAutoclosing;
+  // Return null if the tag is invalid.
+  if (!validTag) return null;
 
-    case 'dd':
-    case 'dt':
-      return ancestorInfo.dlItemTagAutoclosing;
+  // Define a list of actions to take for each valid tag.
+  const actions = [
+    ancestorInfo.pTagInButtonScope, // 0 returns ancestorInfo.pTagInButtonScope
+    ancestorInfo.formTag || ancestorInfo.pTagInButtonScope, // 1 returns formTag or pTagInButtonScope
+    ancestorInfo.listItemTagAutoclosing, // 2 returns ancestorInfo.listItemTagAutoclosing
+    ancestorInfo.dlItemTagAutoclosing, // 3 returns ancestorInfo.dlItemTagAutoclosing 
+    ancestorInfo.buttonTagInScope, // 4 returns ancestorInfo.buttonTagInScope
+    ancestorInfo.aTagInScope, // 5 returns ancestorInfo.aTagInScope
+    ancestorInfo.nobrTagInScope // 6 returns ancestorInfo.nobrTagInScope
+  ];
 
-    case 'button':
-      return ancestorInfo.buttonTagInScope;
-
-    case 'a':
-      // Spec says something about storing a list of markers, but it sounds
-      // equivalent to this check.
-      return ancestorInfo.aTagInScope;
-
-    case 'nobr':
-      return ancestorInfo.nobrTagInScope;
-  }
-
-  return null;
+  // Return the appropriate action for the given valid tag.
+  return actions[validTag - 1] || null;
 }
 
 const didWarn: {[string]: boolean} = {};
