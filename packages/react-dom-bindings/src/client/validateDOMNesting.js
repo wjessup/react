@@ -364,71 +364,54 @@ function isTagValidWithParent(tag: string, parentTag: ?string): boolean {
 /**
  * Returns whether
  */
-function findInvalidAncestorForTag(
-  tag: string,
-  ancestorInfo: AncestorInfoDev,
-): ?Info {
-  switch (tag) {
-    case 'address':
-    case 'article':
-    case 'aside':
-    case 'blockquote':
-    case 'center':
-    case 'details':
-    case 'dialog':
-    case 'dir':
-    case 'div':
-    case 'dl':
-    case 'fieldset':
-    case 'figcaption':
-    case 'figure':
-    case 'footer':
-    case 'header':
-    case 'hgroup':
-    case 'main':
-    case 'menu':
-    case 'nav':
-    case 'ol':
-    case 'p':
-    case 'section':
-    case 'summary':
-    case 'ul':
-    case 'pre':
-    case 'listing':
-    case 'table':
-    case 'hr':
-    case 'xmp':
-    case 'h1':
-    case 'h2':
-    case 'h3':
-    case 'h4':
-    case 'h5':
-    case 'h6':
-      return ancestorInfo.pTagInButtonScope;
+function findInvalidAncestorForTag(tag: string, ancestorInfo: AncestorInfoDev): Info | null {
+  const validAncestors: Record<string, Info | null> = {
+    address: ancestorInfo.pTagInButtonScope,
+    article: ancestorInfo.pTagInButtonScope,
+    aside: ancestorInfo.pTagInButtonScope,
+    blockquote: ancestorInfo.pTagInButtonScope,
+    center: ancestorInfo.pTagInButtonScope,
+    details: ancestorInfo.pTagInButtonScope,
+    dialog: ancestorInfo.pTagInButtonScope,
+    dir: ancestorInfo.pTagInButtonScope,
+    div: ancestorInfo.pTagInButtonScope,
+    dl: ancestorInfo.pTagInButtonScope,
+    fieldset: ancestorInfo.pTagInButtonScope,
+    figcaption: ancestorInfo.pTagInButtonScope,
+    figure: ancestorInfo.pTagInButtonScope,
+    footer: ancestorInfo.pTagInButtonScope,
+    header: ancestorInfo.pTagInButtonScope,
+    hgroup: ancestorInfo.pTagInButtonScope,
+    main: ancestorInfo.pTagInButtonScope,
+    menu: ancestorInfo.pTagInButtonScope,
+    nav: ancestorInfo.pTagInButtonScope,
+    ol: ancestorInfo.pTagInButtonScope,
+    p: ancestorInfo.pTagInButtonScope,
+    section: ancestorInfo.pTagInButtonScope,
+    summary: ancestorInfo.pTagInButtonScope,
+    ul: ancestorInfo.pTagInButtonScope,
+    pre: ancestorInfo.pTagInButtonScope,
+    listing: ancestorInfo.pTagInButtonScope,
+    table: ancestorInfo.pTagInButtonScope,
+    hr: ancestorInfo.pTagInButtonScope,
+    xmp: ancestorInfo.pTagInButtonScope,
+    h1: ancestorInfo.pTagInButtonScope,
+    h2: ancestorInfo.pTagInButtonScope,
+    h3: ancestorInfo.pTagInButtonScope,
+    h4: ancestorInfo.pTagInButtonScope,
+    h5: ancestorInfo.pTagInButtonScope,
+    h6: ancestorInfo.pTagInButtonScope,
+    form: ancestorInfo.formTag || ancestorInfo.pTagInButtonScope,
+    li: ancestorInfo.listItemTagAutoclosing,
+    dd: ancestorInfo.dlItemTagAutoclosing,
+    dt: ancestorInfo.dlItemTagAutoclosing,
+    button: ancestorInfo.buttonTagInScope,
+    a: ancestorInfo.aTagInScope,
+    nobr: ancestorInfo.nobrTagInScope,
+  };
 
-    case 'form':
-      return ancestorInfo.formTag || ancestorInfo.pTagInButtonScope;
-
-    case 'li':
-      return ancestorInfo.listItemTagAutoclosing;
-
-    case 'dd':
-    case 'dt':
-      return ancestorInfo.dlItemTagAutoclosing;
-
-    case 'button':
-      return ancestorInfo.buttonTagInScope;
-
-    case 'a':
-      // Spec says something about storing a list of markers, but it sounds
-      // equivalent to this check.
-      return ancestorInfo.aTagInScope;
-
-    case 'nobr':
-      return ancestorInfo.nobrTagInScope;
-  }
-
-  return null;
+  const result = validAncestors[tag];
+  return (result === undefined) ? null : result;
 }
 
 const didWarn: {[string]: boolean} = {};
