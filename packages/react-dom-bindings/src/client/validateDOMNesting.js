@@ -364,68 +364,77 @@ function isTagValidWithParent(tag: string, parentTag: ?string): boolean {
 /**
  * Returns whether
  */
-function findInvalidAncestorForTag(
+type AncestorEntry = {
+  name: string;
+  tagAutoClosing?: boolean;
+  buttonScope?: boolean;
+  formScope?: boolean;
+  listItemScope?: boolean;
+  dlItemScope?: boolean;
+  aScope?: boolean;
+  nobrScope?: boolean;
+};
+
+type AncestorInfo = {
+  list: Array<AncestorEntry>;
+  pTagInButtonScope?: AncestorEntry;
+  formTag?: AncestorEntry;
+  listItemTagAutoclosing?: AncestorEntry;
+  dlItemTagAutoclosing?: AncestorEntry;
+  buttonTagInScope?: AncestorEntry;
+  aTagInScope?: AncestorEntry;
+  nobrTagInScope?: AncestorEntry;
+};
+
+export function findInvalidAncestorForTag(
   tag: string,
-  ancestorInfo: AncestorInfoDev,
-): ?Info {
-  switch (tag) {
-    case 'address':
-    case 'article':
-    case 'aside':
-    case 'blockquote':
-    case 'center':
-    case 'details':
-    case 'dialog':
-    case 'dir':
-    case 'div':
-    case 'dl':
-    case 'fieldset':
-    case 'figcaption':
-    case 'figure':
-    case 'footer':
-    case 'header':
-    case 'hgroup':
-    case 'main':
-    case 'menu':
-    case 'nav':
-    case 'ol':
-    case 'p':
-    case 'section':
-    case 'summary':
-    case 'ul':
-    case 'pre':
-    case 'listing':
-    case 'table':
-    case 'hr':
-    case 'xmp':
-    case 'h1':
-    case 'h2':
-    case 'h3':
-    case 'h4':
-    case 'h5':
-    case 'h6':
-      return ancestorInfo.pTagInButtonScope;
+  ancestors: AncestorInfo
+): AncestorEntry | null {
+  // Find the specified tag in the ancestors list
+  const tagEntry = ancestors.list.find((ancestor) => ancestor.name === tag);
+  
+  if (!tagEntry) {
+    return null;
+  }
 
-    case 'form':
-      return ancestorInfo.formTag || ancestorInfo.pTagInButtonScope;
+  if (!tagEntry.tagAutoClosing) {
+    // Iterate through ancestors up to the matched tag
+    for (let i = ancestors.list.length - 1; i >= 0; i--) {
+      const ancestor = ancestors.list[i];
 
-    case 'li':
-      return ancestorInfo.listItemTagAutoclosing;
+      if (ancestor.name === tagEntry.name) {
+        break;
+      }
 
-    case 'dd':
-    case 'dt':
-      return ancestorInfo.dlItemTagAutoclosing;
-
-    case 'button':
-      return ancestorInfo.buttonTagInScope;
-
-    case 'a':
-      // Spec says something about storing a list of markers, but it sounds
-      // equivalent to this check.
-      return ancestorInfo.aTagInScope;
-
-    case 'nobr':
-      return ancestorInfo.nobrTagInScope;
+      // Check each ancestor entry for a matching attribute, indicating that it can be a parent of the tag being searched for
+      if (ancestor.buttonScope && ancestors.pTagInButtonScope) {
+        return ancestors.pTagInButtonScope;
+      }
+  
+      if (ancestor.formScope && ancestors.formTag) {
+        return ancestors.formTag;
+      }
+  
+      if (ancestor.listItemScope && ancestors.listItemTagAutoclosing) {
+        return ancestors.listItemTagAutoclosing;
+      }
+  
+      if (ancestor.dlItemScope && ancestors.dlItemTagAutoclosing) {
+        return ancestors.dlItemTagAutoclosing;
+      }
+  
+      if (ancestor.buttonScope && ancestors.buttonTagInScope) {
+        return ancestors.buttonTagInScope;
+      }
+  
+      if (ancestor.aScope && ancestors.aTagInScope) {
+        return ancestors.aTagInScope;
+      }
+  
+      if (ancestor.nobrScope && ancestors.nobrTagInScope) {
+        return ancestors.nobrTagInScope;
+      }
+    }
   }
 
   return null;
