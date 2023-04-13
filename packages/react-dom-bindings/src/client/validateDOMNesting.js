@@ -364,71 +364,61 @@ function isTagValidWithParent(tag: string, parentTag: ?string): boolean {
 /**
  * Returns whether
  */
-function findInvalidAncestorForTag(
-  tag: string,
-  ancestorInfo: AncestorInfoDev,
-): ?Info {
-  switch (tag) {
-    case 'address':
-    case 'article':
-    case 'aside':
-    case 'blockquote':
-    case 'center':
-    case 'details':
-    case 'dialog':
-    case 'dir':
-    case 'div':
-    case 'dl':
-    case 'fieldset':
-    case 'figcaption':
-    case 'figure':
-    case 'footer':
-    case 'header':
-    case 'hgroup':
-    case 'main':
-    case 'menu':
-    case 'nav':
-    case 'ol':
-    case 'p':
-    case 'section':
-    case 'summary':
-    case 'ul':
-    case 'pre':
-    case 'listing':
-    case 'table':
-    case 'hr':
-    case 'xmp':
-    case 'h1':
-    case 'h2':
-    case 'h3':
-    case 'h4':
-    case 'h5':
-    case 'h6':
-      return ancestorInfo.pTagInButtonScope;
+function findInvalidAncestorForTag(tag, ancestorInfo) {
+  const buttonAncestorTags = [
+    'address',
+    'article',
+    'aside',
+    'blockquote',
+    'center',
+    'details',
+    'dialog',
+    'dir',
+    'div',
+    'dl',
+    'fieldset',
+    'figcaption',
+    'figure',
+    'footer',
+    'header',
+    'hgroup',
+    'main',
+    'menu',
+    'nav',
+    'ol',
+    'p',
+    'section',
+    'summary',
+    'ul',
+    'pre',
+    'listing',
+    'table',
+    'hr',
+    'xmp',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6'
+  ];
 
-    case 'form':
-      return ancestorInfo.formTag || ancestorInfo.pTagInButtonScope;
+  const invalidAncestorsInfo = {
+    ...buttonAncestorTags.reduce((result, buttonTag) => {
+      return Object.assign({}, result, {
+        [buttonTag]: ancestorInfo.pTagInButtonScope
+      });
+    }, {}),
+    form: (ancestorInfo.formTag || ancestorInfo.pTagInButtonScope),
+    li: ancestorInfo.listItemTagAutoclosing,
+    dd: ancestorInfo.dlItemTagAutoclosing,
+    dt: ancestorInfo.dlItemTagAutoclosing,
+    button: ancestorInfo.buttonTagInScope,
+    a: ancestorInfo.aTagInScope,
+    nobr: ancestorInfo.nobrTagInScope,
+  };
 
-    case 'li':
-      return ancestorInfo.listItemTagAutoclosing;
-
-    case 'dd':
-    case 'dt':
-      return ancestorInfo.dlItemTagAutoclosing;
-
-    case 'button':
-      return ancestorInfo.buttonTagInScope;
-
-    case 'a':
-      // Spec says something about storing a list of markers, but it sounds
-      // equivalent to this check.
-      return ancestorInfo.aTagInScope;
-
-    case 'nobr':
-      return ancestorInfo.nobrTagInScope;
-  }
-
-  return null;
+  return invalidAncestorsInfo[tag];
 }
 
 const didWarn: {[string]: boolean} = {};
