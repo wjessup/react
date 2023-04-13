@@ -364,71 +364,195 @@ function isTagValidWithParent(tag: string, parentTag: ?string): boolean {
 /**
  * Returns whether
  */
-function findInvalidAncestorForTag(
-  tag: string,
-  ancestorInfo: AncestorInfoDev,
-): ?Info {
-  switch (tag) {
-    case 'address':
-    case 'article':
-    case 'aside':
-    case 'blockquote':
-    case 'center':
-    case 'details':
-    case 'dialog':
-    case 'dir':
-    case 'div':
-    case 'dl':
-    case 'fieldset':
-    case 'figcaption':
-    case 'figure':
-    case 'footer':
-    case 'header':
-    case 'hgroup':
-    case 'main':
-    case 'menu':
-    case 'nav':
-    case 'ol':
-    case 'p':
-    case 'section':
-    case 'summary':
-    case 'ul':
-    case 'pre':
-    case 'listing':
-    case 'table':
-    case 'hr':
-    case 'xmp':
-    case 'h1':
-    case 'h2':
-    case 'h3':
-    case 'h4':
-    case 'h5':
-    case 'h6':
-      return ancestorInfo.pTagInButtonScope;
+interface IAncestorInfoDev {
+  pTagInButtonScope: ?Info;
+  formTag: ?Info;
+  listItemTagAutoclosing: ?Info;
+  dlItemTagAutoclosing: ?Info;
+  buttonTagInScope: ?Info;
+  aTagInScope: ?Info;
+  nobrTagInScope: ?Info;
+}
 
-    case 'form':
-      return ancestorInfo.formTag || ancestorInfo.pTagInButtonScope;
+function getAncestor(tagName: string, tags: Record<string, () => (Info | null)>, ancestorInfoDev: IAncestorInfoDev): (Info | null) {
+  const tagFunction = tags[tagName];
+  return tagFunction ? tagFunction() : null;
+}
 
-    case 'li':
-      return ancestorInfo.listItemTagAutoclosing;
+export function getAncestorInfoForTag(tagName: string, ancestorInfoDev: IAncestorInfoDev): (Info | null) {
+  const tags = [
+    {
+      tag: 'address',
+      func: () => ancestorInfoDev.pTagInButtonScope,
+    },
+    {
+      tag: 'article',
+      func: () => ancestorInfoDev.pTagInButtonScope,
+    },
+    {
+      tag: 'aside',
+      func: () => ancestorInfoDev.pTagInButtonScope,
+    },
+    {
+      tag: 'blockquote',
+      func: () => ancestorInfoDev.pTagInButtonScope,
+    },
+    {
+      tag: 'center',
+          func: () => ancestorInfoDev.pTagInButtonScope,
+    },
+    {
+      tag: 'details',
+      func: () => ancestorInfoDev.pTagInButtonScope,
+    },
+    {
+      tag:  'dialog',
+      func: () => ancestorInfoDev.pTagInButtonScope,
+    },
+    {
+      tag: 'dir',
+      func: () => ancestorInfoDev.pTagInButtonScope,
+    },
+    {
+      tag: 'div',
+      func: () => ancestorInfoDev.pTagInButtonScope,
+    },
+    {
+      tag: 'dl',
+      func: () => ancestorInfoDev.pTagInButtonScope,
+    },
+    {
+      tag: 'fieldset',
+      func: () => ancestorInfoDev.pTagInButtonScope,
+    },
+    {
+      tag: 'figcaption',
+      func: () => ancestorInfoDev.pTagInButtonScope,
+    },
+    {
+      tag: 'figure',
+      func: () => ancestorInfoDev.pTagInButtonScope,
+    },
+    {
+      tag: 'footer',
+      func: () => ancestorInfoDev.pTagInButtonScope,
+    },
+    {
+      tag: 'header',
+      func: () => ancestorInfoDev.pTagInButtonScope,
+    },
+    {
+      tag: 'hgroup',
+      func: () => ancestorInfoDev.pTagInButtonScope,
+    },
+    {
+      tag: 'main',
+      func: () => ancestorInfoDev.pTagInButtonScope,
+    },
+    {
+      tag: 'menu',
+      func: () => ancestorInfoDev.pTagInButtonScope,
+    },
+    {
+      tag: 'nav',
+      func: () => ancestorInfoDev.pTagInButtonScope,
+    },
+    {
+      tag: 'ol',
+      func: () => ancestorInfoDev.pTagInButtonScope,
+    },
+    {
+      tag: 'p',
+      func: () => ancestorInfoDev.pTagInButtonScope,
+    },
+    {
+      tag: 'section',
+      func: () => ancestorInfoDev.pTagInButtonScope,
+    },
+    {
+      tag: 'summary',
+      func: () => ancestorInfoDev.pTagInButtonScope,
+    },
+    {
+      tag: 'ul',
+      func: () => ancestorInfoDev.pTagInButtonScope,
+    },
+    {
+      tag: 'pre',
+      func: () => ancestorInfoDev.pTagInButtonScope,
+    },
+    {
+      tag: 'listing',
+      func: () => ancestorInfoDev.pTagInButtonScope,
+    },
+    {
+      tag: 'table',
+      func: () => ancestorInfoDev.pTagInButtonScope,
+    },
+    {
+      tag: 'hr',
+      func: () => ancestorInfoDev.pTagInButtonScope,
+    },
+    {
+      tag: 'xmp',
+      func: () => ancestorInfoDev.pTagInButtonScope,
+    },
+    {
+      tag: 'h1',
+      func: () => ancestorInfoDev.pTagInButtonScope,
+    },
+    {
+      tag: 'h2',
+      func: () => ancestorInfoDev.pTagInButtonScope,
+    },
+    {
+      tag: 'h3',
+      func: () => ancestorInfoDev.pTagInButtonScope,
+    },
+    {
+      tag: 'h4',
+      func: () => ancestorInfoDev.pTagInButtonScope,
+    },
+    {
+      tag: 'h5',
+      func: () => ancestorInfoDev.pTagInButtonScope,
+    },
+    {
+      tag: 'h6',
+      func: () => ancestorInfoDev.pTagInButtonScope,
+    },
+    {
+      tag: 'form',
+      func: () => ancestorInfoDev.formTag || ancestorInfoDev.pTagInButtonScope,
+    },
+    {
+      tag: 'li',
+      func: () => ancestorInfoDev.listItemTagAutoclosing,
+    },
+    {
+      tag: 'dd',
+      func: () => ancestorInfoDev.dlItemTagAutoclosing,
+    },
+    {
+      tag: 'dt',
+      func: () => ancestorInfoDev.dlItemTagAutoclosing,
+    },
+    {
+      tag: 'button',
+      func: () => ancestorInfoDev.buttonTagInScope,
+    },
+    {
+      tag: 'a',
+      func: () => ancestorInfoDev.aTagInScope,
+    },
+    {
+      tag: 'nobr',
+      func: () => ancestorInfoDev.nobrTagInScope,
+    },
+  ];
 
-    case 'dd':
-    case 'dt':
-      return ancestorInfo.dlItemTagAutoclosing;
-
-    case 'button':
-      return ancestorInfo.buttonTagInScope;
-
-    case 'a':
-      // Spec says something about storing a list of markers, but it sounds
-      // equivalent to this check.
-      return ancestorInfo.aTagInScope;
-
-    case 'nobr':
-      return ancestorInfo.nobrTagInScope;
-  }
-
-  return null;
+  const tagFuncObj = tags.find((item) => item.tag === tagName);
+  return tagFuncObj && tagFuncObj.func();
 }
 
 const didWarn: {[string]: boolean} = {};
