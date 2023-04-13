@@ -557,89 +557,91 @@ export type DataType =
 /**
  * Get a enhanced/artificial type string based on the object instance
  */
-export function getDataType(data: Object): DataType {
+export function isReactElement(data: any) {
+  return typeof data === 'object' && data !== null && data.hasOwnProperty('$$typeof') && data.hasOwnProperty('_store');
+}
+
+function isHtmlElement(data: any) {
+  return typeof HTMLElement !== 'undefined' && data instanceof HTMLElement;
+}
+
+function isArrayBuffer(data: any) {
+  return data.constructor && data.constructor.name === 'ArrayBuffer';
+}
+
+function isIterable(data: any) {
+  return typeof data[Symbol.iterator] === 'function';
+}
+
+function isTypedArray(data: any) {
+  return ArrayBuffer.isView(data) && hasOwnProperty.call(data.constructor, 'BYTES_PER_ELEMENT');
+}
+
+function getArrayLikeObjectType(data: any) {
+  const iterator = data[Symbol.iterator]();
+  return iterator === data ? 'opaque_iterator' : 'iterator';
+}
+
+function isPlainObject(data: any) {
+  return typeof data === 'object' && data !== null && !Array.isArray(data) && !(data instanceof Date);
+}
+
+function getDataType(data: any): string {
   if (data === null) {
     return 'null';
   } else if (data === undefined) {
     return 'undefined';
-  }
-
-  if (isElement(data)) {
+  } else if (isReactElement(data)) {
     return 'react_element';
-  }
-
-  if (typeof HTMLElement !== 'undefined' && data instanceof HTMLElement) {
+  } else if (isHtmlElement(data)) {
     return 'html_element';
-  }
-
-  const type = typeof data;
-  switch (type) {
-    case 'bigint':
-      return 'bigint';
-    case 'boolean':
-      return 'boolean';
-    case 'function':
-      return 'function';
-    case 'number':
-      if (Number.isNaN(data)) {
-        return 'nan';
-      } else if (!Number.isFinite(data)) {
-        return 'infinity';
-      } else {
-        return 'number';
-      }
-    case 'object':
-      if (isArray(data)) {
-        return 'array';
-      } else if (ArrayBuffer.isView(data)) {
-        return hasOwnProperty.call(data.constructor, 'BYTES_PER_ELEMENT')
-          ? 'typed_array'
-          : 'data_view';
-      } else if (data.constructor && data.constructor.name === 'ArrayBuffer') {
-        // HACK This ArrayBuffer check is gross; is there a better way?
-        // We could try to create a new DataView with the value.
-        // If it doesn't error, we know it's an ArrayBuffer,
-        // but this seems kind of awkward and expensive.
-        return 'array_buffer';
-      } else if (typeof data[Symbol.iterator] === 'function') {
-        const iterator = data[Symbol.iterator]();
-        if (!iterator) {
-          // Proxies might break assumptoins about iterators.
-          // See github.com/facebook/react/issues/21654
+  } else {
+    const type = typeof data;
+    switch (type) {
+      case 'bigint':
+        return 'bigint';
+      case 'boolean':
+        return 'boolean';
+      case 'number':
+        if (Number.isNaN(data)) {
+          return 'nan';
+        } else if (!Number.isFinite(data)) {
+          return 'infinity';
         } else {
-          return iterator === data ? 'opaque_iterator' : 'iterator';
+          return 'number';
         }
-      } else if (data.constructor && data.constructor.name === 'RegExp') {
-        return 'regexp';
-      } else {
-        // $FlowFixMe[method-unbinding]
-        const toStringValue = Object.prototype.toString.call(data);
-        if (toStringValue === '[object Date]') {
-          return 'date';
-        } else if (toStringValue === '[object HTMLAllCollection]') {
-          return 'html_all_collection';
+      case 'string':
+        return 'string';
+      case 'symbol':
+        return 'symbol';
+      case 'function':
+        return 'function';
+      case 'object':
+        if (isArrayBuffer(data)) {
+          return 'array_buffer';
+        } else if (isTypedArray(data)) {
+          return 'typed_array';
+        } else if (isIterable(data)) {
+          return getArrayLikeObjectType(data);
+        } else {
+          const toStringValue = Object.prototype.toString.call(data);
+          if (toStringValue === '[object DataView]') {
+            return 'data_view';
+          } else if (toStringValue === '[object RegExp]') {
+            return 'regexp';
+          } else if (toStringValue === '[object Date]') {
+            return 'date';
+          } else if (toStringValue === '[object HTMLAllCollection]') {
+            return 'html_all_collection';
+          } else if (isPlainObject(data)) {
+            return 'object';
+          } else {
+            return 'class_instance';
+          }
         }
-      }
-
-      if (!isPlainObject(data)) {
-        return 'class_instance';
-      }
-
-      return 'object';
-    case 'string':
-      return 'string';
-    case 'symbol':
-      return 'symbol';
-    case 'undefined':
-      if (
-        // $FlowFixMe[method-unbinding]
-        Object.prototype.toString.call(data) === '[object HTMLAllCollection]'
-      ) {
-        return 'html_all_collection';
-      }
-      return 'undefined';
-    default:
-      return 'unknown';
+      default:
+        return 'unknown';
+    }
   }
 }
 
