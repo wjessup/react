@@ -364,10 +364,17 @@ function isTagValidWithParent(tag: string, parentTag: ?string): boolean {
 /**
  * Returns whether
  */
-function findInvalidAncestorForTag(
-  tag: string,
-  ancestorInfo: AncestorInfoDev,
-): ?Info {
+function findInvalidAncestorForTag(tag, ancestorInfo) {
+  const {
+    pTagInButtonScope, 
+    formTag, 
+    listItemTagAutoclosing,
+    dlItemTagAutoclosing,
+    buttonTagInScope,
+    aTagInScope,
+    nobrTagInScope
+  } = ancestorInfo;
+
   switch (tag) {
     case 'address':
     case 'article':
@@ -404,31 +411,30 @@ function findInvalidAncestorForTag(
     case 'h4':
     case 'h5':
     case 'h6':
-      return ancestorInfo.pTagInButtonScope;
+      return pTagInButtonScope;
 
     case 'form':
-      return ancestorInfo.formTag || ancestorInfo.pTagInButtonScope;
+      return formTag || pTagInButtonScope;
 
     case 'li':
-      return ancestorInfo.listItemTagAutoclosing;
+      return listItemTagAutoclosing;
 
     case 'dd':
     case 'dt':
-      return ancestorInfo.dlItemTagAutoclosing;
+      return dlItemTagAutoclosing;
 
     case 'button':
-      return ancestorInfo.buttonTagInScope;
+      return buttonTagInScope;
 
     case 'a':
-      // Spec says something about storing a list of markers, but it sounds
-      // equivalent to this check.
-      return ancestorInfo.aTagInScope;
+      return aTagInScope;
 
     case 'nobr':
-      return ancestorInfo.nobrTagInScope;
-  }
+      return nobrTagInScope;
 
-  return null;
+    default:
+      return null;
+  }
 }
 
 const didWarn: {[string]: boolean} = {};
