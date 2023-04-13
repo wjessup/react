@@ -364,10 +364,40 @@ function isTagValidWithParent(tag: string, parentTag: ?string): boolean {
 /**
  * Returns whether
  */
-function findInvalidAncestorForTag(
-  tag: string,
-  ancestorInfo: AncestorInfoDev,
-): ?Info {
+type AncestorInfoDev = {
+  pTagInButtonScope: ?Info;
+  formTag: ?Info;
+  listItemTagAutoclosing: ?Info;
+  dlItemTagAutoclosing: ?Info;
+  buttonTagInScope: ?Info;
+  aTagInScope: ?Info;
+  nobrTagInScope: ?Info;
+};
+  
+type Tags = 'address' | 'article' | 'aside' | 'blockquote' | 'center' | 'details' | 'dialog' | 'dir' | 'div' |
+  'dl' | 'fieldset' | 'figcaption' | 'figure' | 'footer' | 'header' | 'hgroup' | 'main' | 'menu' | 'nav' |
+  'ol' | 'p' | 'section' | 'summary' | 'ul' | 'pre' | 'listing' | 'table' | 'hr' | 'xmp' | 'h1' | 'h2' |
+  'h3' | 'h4' | 'h5' | 'h6' | 'form' | 'li' | 'dd' | 'dt' | 'button' | 'a' | 'nobr';
+
+/**
+ * Given a string tag and an object ancestorInfo, this function returns Info if the tag has invalid
+ * ancestor or returns null if it is valid. 
+ * 
+ * @param {Tags} tag - The tag string that needs to be validated.
+ * @param {AncestorInfoDev} ancestorInfo - An object containing ancestor information.
+ * @returns {?Info} - Either the value of the property with invalid ancestor information or null.
+ */
+function findInvalidAncestorForTag(tag: Tags, ancestorInfo: AncestorInfoDev): ?Info {
+  const {
+    pTagInButtonScope,
+    formTag,
+    listItemTagAutoclosing,
+    dlItemTagAutoclosing,
+    buttonTagInScope,
+    aTagInScope,
+    nobrTagInScope,
+  } = ancestorInfo;
+
   switch (tag) {
     case 'address':
     case 'article':
@@ -404,31 +434,30 @@ function findInvalidAncestorForTag(
     case 'h4':
     case 'h5':
     case 'h6':
-      return ancestorInfo.pTagInButtonScope;
+      return pTagInButtonScope;
 
     case 'form':
-      return ancestorInfo.formTag || ancestorInfo.pTagInButtonScope;
+      return formTag || pTagInButtonScope;
 
     case 'li':
-      return ancestorInfo.listItemTagAutoclosing;
+      return listItemTagAutoclosing;
 
     case 'dd':
     case 'dt':
-      return ancestorInfo.dlItemTagAutoclosing;
+      return dlItemTagAutoclosing;
 
     case 'button':
-      return ancestorInfo.buttonTagInScope;
+      return buttonTagInScope;
 
     case 'a':
-      // Spec says something about storing a list of markers, but it sounds
-      // equivalent to this check.
-      return ancestorInfo.aTagInScope;
+      return aTagInScope;
 
     case 'nobr':
-      return ancestorInfo.nobrTagInScope;
-  }
+      return nobrTagInScope;
 
-  return null;
+    default:
+      return null;
+  }
 }
 
 const didWarn: {[string]: boolean} = {};
