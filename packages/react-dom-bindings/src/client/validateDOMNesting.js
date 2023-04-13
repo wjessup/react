@@ -364,71 +364,57 @@ function isTagValidWithParent(tag: string, parentTag: ?string): boolean {
 /**
  * Returns whether
  */
-function findInvalidAncestorForTag(
-  tag: string,
-  ancestorInfo: AncestorInfoDev,
-): ?Info {
-  switch (tag) {
-    case 'address':
-    case 'article':
-    case 'aside':
-    case 'blockquote':
-    case 'center':
-    case 'details':
-    case 'dialog':
-    case 'dir':
-    case 'div':
-    case 'dl':
-    case 'fieldset':
-    case 'figcaption':
-    case 'figure':
-    case 'footer':
-    case 'header':
-    case 'hgroup':
-    case 'main':
-    case 'menu':
-    case 'nav':
-    case 'ol':
-    case 'p':
-    case 'section':
-    case 'summary':
-    case 'ul':
-    case 'pre':
-    case 'listing':
-    case 'table':
-    case 'hr':
-    case 'xmp':
-    case 'h1':
-    case 'h2':
-    case 'h3':
-    case 'h4':
-    case 'h5':
-    case 'h6':
-      return ancestorInfo.pTagInButtonScope;
+const tagToAncestorInfoMap = {
+  address: 'pTagInButtonScope',
+  article: 'pTagInButtonScope',
+  aside: 'pTagInButtonScope',
+  blockquote: 'pTagInButtonScope',
+  center: 'pTagInButtonScope',
+  details: 'pTagInButtonScope',
+  dialog: 'pTagInButtonScope',
+  dir: 'pTagInButtonScope',
+  div: 'pTagInButtonScope',
+  dl: 'pTagInButtonScope',
+  fieldset: 'pTagInButtonScope',
+  figcaption: 'pTagInButtonScope',
+  figure: 'pTagInButtonScope',
+  footer: 'pTagInButtonScope',
+  header: 'pTagInButtonScope',
+  hgroup: 'pTagInButtonScope',
+  main: 'pTagInButtonScope',
+  menu: 'pTagInButtonScope',
+  nav: 'pTagInButtonScope',
+  ol: 'pTagInButtonScope',
+  p: 'pTagInButtonScope',
+  section: 'pTagInButtonScope',
+  summary: 'pTagInButtonScope',
+  ul: 'pTagInButtonScope',
+  pre: 'pTagInButtonScope',
+  listing: 'pTagInButtonScope',
+  table: 'pTagInButtonScope',
+  hr: 'pTagInButtonScope',
+  xmp: 'pTagInButtonScope',
+  h1: 'pTagInButtonScope',
+  h2: 'pTagInButtonScope',
+  h3: 'pTagInButtonScope',
+  h4: 'pTagInButtonScope',
+  h5: 'pTagInButtonScope',
+  h6: 'pTagInButtonScope',
+  form: 'formTag',
+  li: 'listItemTagAutoclosing',
+  dd: 'dlItemTagAutoclosing',
+  dt: 'dlItemTagAutoclosing',
+  button: 'buttonTagInScope',
+  a: 'aTagInScope',
+  nobr: 'nobrTagInScope',
+};
 
-    case 'form':
-      return ancestorInfo.formTag || ancestorInfo.pTagInButtonScope;
+function findInvalidAncestorForTag(tag, ancestorInfo) {
+  const mappedAncestorInfo = tagToAncestorInfoMap[tag];
 
-    case 'li':
-      return ancestorInfo.listItemTagAutoclosing;
-
-    case 'dd':
-    case 'dt':
-      return ancestorInfo.dlItemTagAutoclosing;
-
-    case 'button':
-      return ancestorInfo.buttonTagInScope;
-
-    case 'a':
-      // Spec says something about storing a list of markers, but it sounds
-      // equivalent to this check.
-      return ancestorInfo.aTagInScope;
-
-    case 'nobr':
-      return ancestorInfo.nobrTagInScope;
-  }
-
-  return null;
+  return mappedAncestorInfo ?
+    ancestorInfo[mappedAncestorInfo] || null :
+    null;
 }
 
 const didWarn: {[string]: boolean} = {};
