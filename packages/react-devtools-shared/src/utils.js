@@ -557,87 +557,79 @@ export type DataType =
 /**
  * Get a enhanced/artificial type string based on the object instance
  */
-export function getDataType(data: Object): DataType {
-  if (data === null) {
-    return 'null';
-  } else if (data === undefined) {
-    return 'undefined';
-  }
+export // Helper functions
+const isNullOrUndefined = (data) => data === null || data === undefined;
+const isElement = (data) => !!data && typeof data.type == "string";
+const isHtmlElement = (data) => typeof HTMLElement !== 'undefined' && data instanceof HTMLElement;
+const isNan = (data) => Number.isNaN(data);
+const isInfinite = (data) => !Number.isFinite(data);
+const isIterator = (data) => typeof data[Symbol.iterator] === 'function';
+const isRegExp = (data) => data.constructor && data.constructor.name === 'RegExp';
+const isPlainObject = (data) => Object.prototype.toString.call(data) === '[object Object]';
+const isHtmlAllCollection = (data) => Object.prototype.toString.call(data) === '[object HTMLAllCollection]';
+const isDataView = (data) => ArrayBuffer.isView(data) && hasOwnProperty.call(data.constructor, 'BYTES_PER_ELEMENT');
+const isTypedArray = (data) => ArrayBuffer.isView(data) && !hasOwnProperty.call(data.constructor, 'BYTES_PER_ELEMENT');
 
+// Main function
+function getDataType(data) {
+  if (isNullOrUndefined(data)) {
+    return `${data}`;
+  }
+  
   if (isElement(data)) {
     return 'react_element';
   }
-
-  if (typeof HTMLElement !== 'undefined' && data instanceof HTMLElement) {
+  
+  if (isHtmlElement(data)) {
     return 'html_element';
   }
 
-  const type = typeof data;
-  switch (type) {
-    case 'bigint':
-      return 'bigint';
-    case 'boolean':
-      return 'boolean';
-    case 'function':
-      return 'function';
-    case 'number':
-      if (Number.isNaN(data)) {
-        return 'nan';
-      } else if (!Number.isFinite(data)) {
-        return 'infinity';
-      } else {
-        return 'number';
-      }
-    case 'object':
-      if (isArray(data)) {
-        return 'array';
-      } else if (ArrayBuffer.isView(data)) {
-        return hasOwnProperty.call(data.constructor, 'BYTES_PER_ELEMENT')
-          ? 'typed_array'
-          : 'data_view';
-      } else if (data.constructor && data.constructor.name === 'ArrayBuffer') {
-        // HACK This ArrayBuffer check is gross; is there a better way?
-        // We could try to create a new DataView with the value.
-        // If it doesn't error, we know it's an ArrayBuffer,
-        // but this seems kind of awkward and expensive.
-        return 'array_buffer';
-      } else if (typeof data[Symbol.iterator] === 'function') {
-        const iterator = data[Symbol.iterator]();
-        if (!iterator) {
-          // Proxies might break assumptoins about iterators.
-          // See github.com/facebook/react/issues/21654
-        } else {
-          return iterator === data ? 'opaque_iterator' : 'iterator';
-        }
-      } else if (data.constructor && data.constructor.name === 'RegExp') {
-        return 'regexp';
-      } else {
-        // $FlowFixMe[method-unbinding]
-        const toStringValue = Object.prototype.toString.call(data);
-        if (toStringValue === '[object Date]') {
-          return 'date';
-        } else if (toStringValue === '[object HTMLAllCollection]') {
-          return 'html_all_collection';
-        }
-      }
+  const dataType = typeof data;
 
+  switch (dataType) {
+    case 'bigint':
+    case 'boolean':
+    case 'function':
+    case 'number':
+    case 'string':
+    case 'symbol':
+      return dataType;
+    case 'object':
+      if (isNan(data)) {
+        return 'nan';
+      }
+      if (isInfinite(data)) {
+        return 'infinity';
+      }
+      if (Array.isArray(data)) {
+        return 'array';
+      }
+      if (isDataView(data)) {
+        return 'data_view';
+      }
+      if (isTypedArray(data)) {
+        return 'typed_array';
+      }
+      if (data.constructor && data.constructor.name === 'ArrayBuffer') {
+        return 'array_buffer';
+      }
+      if (isIterator(data)) {
+        const iterator = data[Symbol.iterator]();
+        return iterator === data ? 'opaque_iterator' : 'iterator';
+      }
+      if (isRegExp(data)) {
+        return 'regexp';
+      }
       if (!isPlainObject(data)) {
         return 'class_instance';
       }
-
-      return 'object';
-    case 'string':
-      return 'string';
-    case 'symbol':
-      return 'symbol';
-    case 'undefined':
-      if (
-        // $FlowFixMe[method-unbinding]
-        Object.prototype.toString.call(data) === '[object HTMLAllCollection]'
-      ) {
+      if (isHtmlAllCollection(data)) {
         return 'html_all_collection';
       }
-      return 'undefined';
+      if (Object.prototype.toString.call(data) === '[object Date]') {
+        return 'date';
+      }
+      return 'object';
     default:
       return 'unknown';
   }
