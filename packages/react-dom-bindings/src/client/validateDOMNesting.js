@@ -364,11 +364,18 @@ function isTagValidWithParent(tag: string, parentTag: ?string): boolean {
 /**
  * Returns whether
  */
-function findInvalidAncestorForTag(
-  tag: string,
-  ancestorInfo: AncestorInfoDev,
-): ?Info {
-  switch (tag) {
+function findInvalidAncestor(currentTag: string, ancestors: AncestorInfoDev): ?Info {
+  const {
+    pTagInButtonScope,
+    formTag,
+    listItemTagAutoclosing,
+    dlItemTagAutoclosing,
+    buttonTagInScope,
+    aTagInScope,
+    nobrTagInScope,
+  } = ancestors;
+
+  switch (currentTag) {
     case 'address':
     case 'article':
     case 'aside':
@@ -393,42 +400,116 @@ function findInvalidAncestorForTag(
     case 'section':
     case 'summary':
     case 'ul':
+      return pTagInButtonScope;
+
     case 'pre':
     case 'listing':
-    case 'table':
-    case 'hr':
-    case 'xmp':
-    case 'h1':
-    case 'h2':
-    case 'h3':
-    case 'h4':
-    case 'h5':
-    case 'h6':
-      return ancestorInfo.pTagInButtonScope;
+      return null;
 
     case 'form':
-      return ancestorInfo.formTag || ancestorInfo.pTagInButtonScope;
+      return formTag || pTagInButtonScope;
 
     case 'li':
-      return ancestorInfo.listItemTagAutoclosing;
+      return listItemTagAutoclosing;
 
     case 'dd':
     case 'dt':
-      return ancestorInfo.dlItemTagAutoclosing;
+      return dlItemTagAutoclosing;
 
     case 'button':
-      return ancestorInfo.buttonTagInScope;
+      return buttonTagInScope;
 
     case 'a':
-      // Spec says something about storing a list of markers, but it sounds
-      // equivalent to this check.
-      return ancestorInfo.aTagInScope;
+      return aTagInScope;
 
     case 'nobr':
-      return ancestorInfo.nobrTagInScope;
+      return nobrTagInScope;
+      
+    default:
+      return null;
+  }
+}
+
+class AncestorInfoDev {
+  _pTagInButtonScope: ?Info;
+
+  _formTag: ?Info;
+
+  _listItemTagAutoclosing: ?Info;
+
+  _dlItemTagAutoclosing: ?Info;
+
+  _buttonTagInScope: ?Info;
+
+  _aTagInScope: ?Info;
+
+  _nobrTagInScope: ?Info;
+
+  constructor() {
+    this._pTagInButtonScope = null;
+    this._formTag = null;
+    this._listItemTagAutoclosing = null;
+    this._dlItemTagAutoclosing = null;
+    this._buttonTagInScope = null;
+    this._aTagInScope = null;
+    this._nobrTagInScope = null;
   }
 
-  return null;
+  get pTagInButtonScope(): ?Info {
+    return this._pTagInButtonScope;
+  }
+
+  set pTagInButtonScope(info: ?Info) {
+    this._pTagInButtonScope = info;
+  }
+
+  get formTag(): ?Info {
+    return this._formTag;
+  }
+
+  set formTag(info: ?Info) {
+    this._formTag = info;
+  }
+
+  get listItemTagAutoclosing(): ?Info {
+    return this._listItemTagAutoclosing;
+  }
+
+  set listItemTagAutoclosing(info: ?Info) {
+    this._listItemTagAutoclosing = info;
+  }
+
+  get dlItemTagAutoclosing(): ?Info {
+    return this._dlItemTagAutoclosing;
+  }
+
+  set dlItemTagAutoclosing(info: ?Info) {
+    this._dlItemTagAutoclosing = info;
+  }
+
+  get buttonTagInScope(): ?Info {
+    return this._buttonTagInScope;
+  }
+
+  set buttonTagInScope(info: ?Info) {
+    this._buttonTagInScope = info;
+  }
+
+  get aTagInScope(): ?Info {
+    return this._aTagInScope;
+  }
+
+  set aTagInScope(info: ?Info) {
+    this._aTagInScope = info;
+  }
+
+  get nobrTagInScope(): ?Info {
+    return this._nobrTagInScope;
+  }
+
+  set nobrTagInScope(info: ?Info) {
+    this._nobrTagInScope = info;
+  }
 }
 
 const didWarn: {[string]: boolean} = {};
