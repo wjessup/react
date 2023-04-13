@@ -557,89 +557,41 @@ export type DataType =
 /**
  * Get a enhanced/artificial type string based on the object instance
  */
-export function getDataType(data: Object): DataType {
-  if (data === null) {
-    return 'null';
-  } else if (data === undefined) {
-    return 'undefined';
-  }
-
-  if (isElement(data)) {
-    return 'react_element';
-  }
-
-  if (typeof HTMLElement !== 'undefined' && data instanceof HTMLElement) {
+export function getDataType(data: any): string {
+  if (data === null || data === undefined || typeof data === 'string' || typeof data === 'symbol' || typeof data === 'bigint') {
+    return typeof data;
+  } else if (typeof HTMLElement !== 'undefined' && data instanceof HTMLElement) {
     return 'html_element';
-  }
-
-  const type = typeof data;
-  switch (type) {
-    case 'bigint':
-      return 'bigint';
-    case 'boolean':
-      return 'boolean';
-    case 'function':
-      return 'function';
-    case 'number':
-      if (Number.isNaN(data)) {
-        return 'nan';
-      } else if (!Number.isFinite(data)) {
-        return 'infinity';
-      } else {
-        return 'number';
-      }
-    case 'object':
-      if (isArray(data)) {
-        return 'array';
-      } else if (ArrayBuffer.isView(data)) {
-        return hasOwnProperty.call(data.constructor, 'BYTES_PER_ELEMENT')
-          ? 'typed_array'
-          : 'data_view';
-      } else if (data.constructor && data.constructor.name === 'ArrayBuffer') {
-        // HACK This ArrayBuffer check is gross; is there a better way?
-        // We could try to create a new DataView with the value.
-        // If it doesn't error, we know it's an ArrayBuffer,
-        // but this seems kind of awkward and expensive.
-        return 'array_buffer';
-      } else if (typeof data[Symbol.iterator] === 'function') {
-        const iterator = data[Symbol.iterator]();
-        if (!iterator) {
-          // Proxies might break assumptoins about iterators.
-          // See github.com/facebook/react/issues/21654
-        } else {
-          return iterator === data ? 'opaque_iterator' : 'iterator';
-        }
-      } else if (data.constructor && data.constructor.name === 'RegExp') {
-        return 'regexp';
-      } else {
-        // $FlowFixMe[method-unbinding]
-        const toStringValue = Object.prototype.toString.call(data);
-        if (toStringValue === '[object Date]') {
-          return 'date';
-        } else if (toStringValue === '[object HTMLAllCollection]') {
-          return 'html_all_collection';
-        }
-      }
-
-      if (!isPlainObject(data)) {
-        return 'class_instance';
-      }
-
-      return 'object';
-    case 'string':
-      return 'string';
-    case 'symbol':
-      return 'symbol';
-    case 'undefined':
-      if (
-        // $FlowFixMe[method-unbinding]
-        Object.prototype.toString.call(data) === '[object HTMLAllCollection]'
-      ) {
-        return 'html_all_collection';
-      }
-      return 'undefined';
-    default:
-      return 'unknown';
+  } else if (isElement(data)) {
+    return 'react_element';
+  } else if (typeof data === 'number' && !Number.isFinite(data)) {
+    return 'infinity';
+  } else if (isArray(data)) {
+    return 'array';
+  } else if (ArrayBuffer.isView(data)) {
+    return hasOwnProperty.call(data.constructor, 'BYTES_PER_ELEMENT')
+      ? 'typed_array'
+      : 'data_view';
+  } else if (data && typeof data[Symbol.iterator] === 'function') {
+    if (data instanceof Map) {
+       return "map";
+    } else if (data instanceof Set) {
+       return "set";
+    } else if (data[Symbol.iterator] === data) { 
+       return 'opaque_iterator';
+    } else {
+      return 'iterator';
+    }
+  } else if (data instanceof RegExp) {
+    return 'regexp';
+  } else if (data instanceof Date) {
+    return 'date';
+  } else if (data && data.constructor && data.constructor.name === 'HTMLAllCollection') {
+    return 'html_all_collection';
+  } else if (!isPlainObject(data)) {
+    return 'class_instance';
+  } else {
+    return 'object';
   }
 }
 
