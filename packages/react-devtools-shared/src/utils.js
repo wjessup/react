@@ -557,89 +557,147 @@ export type DataType =
 /**
  * Get a enhanced/artificial type string based on the object instance
  */
-export function getDataType(data: Object): DataType {
+export function getDataTypeAsString(data) {
   if (data === null) {
-    return 'null';
-  } else if (data === undefined) {
-    return 'undefined';
+    return "null";
+  }
+
+  if (data === undefined) {
+    return "undefined";
   }
 
   if (isElement(data)) {
-    return 'react_element';
+    return "react_element";
   }
 
-  if (typeof HTMLElement !== 'undefined' && data instanceof HTMLElement) {
-    return 'html_element';
+  if (isHTMLElement(data)) {
+    return "html_element";
   }
 
   const type = typeof data;
+
   switch (type) {
-    case 'bigint':
-      return 'bigint';
-    case 'boolean':
-      return 'boolean';
-    case 'function':
-      return 'function';
-    case 'number':
-      if (Number.isNaN(data)) {
-        return 'nan';
-      } else if (!Number.isFinite(data)) {
-        return 'infinity';
-      } else {
-        return 'number';
-      }
-    case 'object':
-      if (isArray(data)) {
-        return 'array';
-      } else if (ArrayBuffer.isView(data)) {
-        return hasOwnProperty.call(data.constructor, 'BYTES_PER_ELEMENT')
-          ? 'typed_array'
-          : 'data_view';
-      } else if (data.constructor && data.constructor.name === 'ArrayBuffer') {
-        // HACK This ArrayBuffer check is gross; is there a better way?
-        // We could try to create a new DataView with the value.
-        // If it doesn't error, we know it's an ArrayBuffer,
-        // but this seems kind of awkward and expensive.
-        return 'array_buffer';
-      } else if (typeof data[Symbol.iterator] === 'function') {
-        const iterator = data[Symbol.iterator]();
-        if (!iterator) {
-          // Proxies might break assumptoins about iterators.
-          // See github.com/facebook/react/issues/21654
-        } else {
-          return iterator === data ? 'opaque_iterator' : 'iterator';
-        }
-      } else if (data.constructor && data.constructor.name === 'RegExp') {
-        return 'regexp';
-      } else {
-        // $FlowFixMe[method-unbinding]
-        const toStringValue = Object.prototype.toString.call(data);
-        if (toStringValue === '[object Date]') {
-          return 'date';
-        } else if (toStringValue === '[object HTMLAllCollection]') {
-          return 'html_all_collection';
-        }
-      }
+    case "bigint":
+      return "bigint";
 
-      if (!isPlainObject(data)) {
-        return 'class_instance';
-      }
+    case "boolean":
+      return "boolean";
 
-      return 'object';
-    case 'string':
-      return 'string';
-    case 'symbol':
-      return 'symbol';
-    case 'undefined':
-      if (
-        // $FlowFixMe[method-unbinding]
-        Object.prototype.toString.call(data) === '[object HTMLAllCollection]'
-      ) {
-        return 'html_all_collection';
-      }
-      return 'undefined';
+    case "function":
+      return "function";
+
+    case "number":
+      return getNumberType(data);
+
+    case "object":
+      return getObjectType(data);
+
+    case "string":
+      return "string";
+
+    case "symbol":
+      return "symbol";
+
     default:
-      return 'unknown';
+      return "unknown";
+  }
+}
+
+function getNumberType(num) {
+  if (Number.isNaN(num)) {
+    return "nan";
+  }
+
+  if (!Number.isFinite(num)) {
+    return "infinity";
+  }
+
+  return "number";
+}
+
+function isHTMLAllCollection(data) {
+  return (
+    getToStringValue(data) === "[object HTMLAllCollection]"
+  );
+}
+
+function isHTMLElement(data) {
+  return (
+    typeof HTMLElement !== "undefined" && data instanceof HTMLElement
+  );
+}
+
+function isIterable(data) {
+  return typeof data[Symbol.iterator] === "function";
+}
+
+function isPlainObject(data) {
+  return (
+    getToStringValue(data) === "[object Object]" &&
+    data.constructor === Object
+  );
+}
+
+function isElement(data) {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    data.$$typeof &&
+    Symbol.for("react.element") === data.$$typeof
+  );
+}
+
+function getToStringValue(data) {
+  return Object.prototype.toString.call(data);
+}
+
+function getObjectType(data) {
+  if (isArray(data)) {
+    return "array";
+  }
+  else if (isArrayBuffer(data)) {
+    const hasBytePerElement = hasOwnProperty.call(
+      data.constructor,
+      "BYTES_PER_ELEMENT"
+    );
+
+    return hasBytePerElement ? "typed_array" : "data_view";
+  }
+  else if (data.constructor && data.constructor.name === "ArrayBuffer") {
+    return "array_buffer";
+  }
+  else if (isIterable(data)) {
+    const iterator = data[Symbol.iterator]();
+
+    if (!iterator) {
+      return "class_instance";
+    }
+
+    return iterator === data ? "opaque_iterator" : "iterator";
+  }
+  else if (data.constructor && data.constructor.name === "RegExp") {
+    return "regexp";
+  }
+  else if (isHTMLAllCollection(data)) {
+    return "html_all_collection";
+  }
+  else if (data instanceof Set) {
+    return "set";
+  }
+  else if (data instanceof Map) {
+    return "map";
+  }
+  else if (!isPlainObject(data)) {
+    return "class_instance";
+  }
+  else {
+    const toStringValue = getToStringValue(data);
+
+    if (toStringValue === "[object Date]") {
+      return "date";
+    }
+
+    return "object";
   }
 }
 
