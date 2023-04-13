@@ -557,11 +557,9 @@ export type DataType =
 /**
  * Get a enhanced/artificial type string based on the object instance
  */
-export function getDataType(data: Object): DataType {
-  if (data === null) {
-    return 'null';
-  } else if (data === undefined) {
-    return 'undefined';
+export function getDataType(data: Object): string {
+  if (data === null || data === undefined || Number.isNaN(data)) {
+    return String(data);
   }
 
   if (isElement(data)) {
@@ -573,71 +571,56 @@ export function getDataType(data: Object): DataType {
   }
 
   const type = typeof data;
+
   switch (type) {
     case 'bigint':
-      return 'bigint';
     case 'boolean':
-      return 'boolean';
     case 'function':
-      return 'function';
     case 'number':
-      if (Number.isNaN(data)) {
-        return 'nan';
-      } else if (!Number.isFinite(data)) {
-        return 'infinity';
-      } else {
-        return 'number';
-      }
+    case 'string':
+    case 'symbol':
+      return type;
     case 'object':
       if (isArray(data)) {
         return 'array';
-      } else if (ArrayBuffer.isView(data)) {
-        return hasOwnProperty.call(data.constructor, 'BYTES_PER_ELEMENT')
-          ? 'typed_array'
-          : 'data_view';
-      } else if (data.constructor && data.constructor.name === 'ArrayBuffer') {
-        // HACK This ArrayBuffer check is gross; is there a better way?
-        // We could try to create a new DataView with the value.
-        // If it doesn't error, we know it's an ArrayBuffer,
-        // but this seems kind of awkward and expensive.
+      }
+
+      if (ArrayBuffer.isView(data)) {
+        return data.byteLength > 0
+          ? hasOwnProperty.call(data.constructor, 'BYTES_PER_ELEMENT')
+            ? 'typed_array'
+            : 'data_view'
+          : 'null_typed_array';
+      }
+
+      if (data.constructor && data.constructor.name === 'ArrayBuffer') {
         return 'array_buffer';
-      } else if (typeof data[Symbol.iterator] === 'function') {
+      }
+
+      if (typeof data[Symbol.iterator] === 'function') {
         const iterator = data[Symbol.iterator]();
         if (!iterator) {
-          // Proxies might break assumptoins about iterators.
+          // Proxies might break assumptions about iterators.
           // See github.com/facebook/react/issues/21654
         } else {
           return iterator === data ? 'opaque_iterator' : 'iterator';
         }
-      } else if (data.constructor && data.constructor.name === 'RegExp') {
+      }
+
+      if (data.constructor && data.constructor.name === 'RegExp') {
         return 'regexp';
-      } else {
-        // $FlowFixMe[method-unbinding]
-        const toStringValue = Object.prototype.toString.call(data);
-        if (toStringValue === '[object Date]') {
-          return 'date';
-        } else if (toStringValue === '[object HTMLAllCollection]') {
-          return 'html_all_collection';
-        }
       }
 
-      if (!isPlainObject(data)) {
-        return 'class_instance';
+      const toStringValue = Object.prototype.toString.call(data);
+      if (toStringValue === '[object Date]') {
+        return 'date';
       }
 
-      return 'object';
-    case 'string':
-      return 'string';
-    case 'symbol':
-      return 'symbol';
-    case 'undefined':
-      if (
-        // $FlowFixMe[method-unbinding]
-        Object.prototype.toString.call(data) === '[object HTMLAllCollection]'
-      ) {
+      if (toStringValue === '[object HTMLAllCollection]') {
         return 'html_all_collection';
       }
-      return 'undefined';
+
+      return isPlainObject(data) ? 'object' : 'class_instance';
     default:
       return 'unknown';
   }
