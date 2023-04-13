@@ -557,23 +557,17 @@ export type DataType =
 /**
  * Get a enhanced/artificial type string based on the object instance
  */
-export function getDataType(data: Object): DataType {
-  if (data === null) {
-    return 'null';
-  } else if (data === undefined) {
-    return 'undefined';
-  }
+export function getDataType(data) {
+  if (data === null) return 'null';
+  if (data === undefined) return 'undefined';
 
-  if (isElement(data)) {
-    return 'react_element';
-  }
+  if (React.isValidElement(data)) return 'react_element';
 
-  if (typeof HTMLElement !== 'undefined' && data instanceof HTMLElement) {
+  if (typeof Element !== 'undefined' && data instanceof Element) {
     return 'html_element';
   }
 
-  const type = typeof data;
-  switch (type) {
+  switch (typeof data) {
     case 'bigint':
       return 'bigint';
     case 'boolean':
@@ -581,66 +575,40 @@ export function getDataType(data: Object): DataType {
     case 'function':
       return 'function';
     case 'number':
-      if (Number.isNaN(data)) {
-        return 'nan';
-      } else if (!Number.isFinite(data)) {
-        return 'infinity';
-      } else {
-        return 'number';
-      }
+      if (Number.isNaN(data)) return 'nan';
+      if (!Number.isFinite(data)) return 'infinity';
+      return 'number';
     case 'object':
-      if (isArray(data)) {
-        return 'array';
-      } else if (ArrayBuffer.isView(data)) {
-        return hasOwnProperty.call(data.constructor, 'BYTES_PER_ELEMENT')
-          ? 'typed_array'
-          : 'data_view';
-      } else if (data.constructor && data.constructor.name === 'ArrayBuffer') {
-        // HACK This ArrayBuffer check is gross; is there a better way?
-        // We could try to create a new DataView with the value.
-        // If it doesn't error, we know it's an ArrayBuffer,
-        // but this seems kind of awkward and expensive.
-        return 'array_buffer';
-      } else if (typeof data[Symbol.iterator] === 'function') {
+      if (Array.isArray(data)) return 'array';
+      if (ArrayBuffer.isView(data)) {
+        return (Object.prototype.toString.call(data.constructor) === '[object DataView]')
+          ? 'data_view'
+          : 'typed_array';
+      }
+      if (data instanceof ArrayBuffer) return 'array_buffer';
+      if (typeof data[Symbol.iterator] === 'function') {
         const iterator = data[Symbol.iterator]();
-        if (!iterator) {
-          // Proxies might break assumptoins about iterators.
-          // See github.com/facebook/react/issues/21654
-        } else {
-          return iterator === data ? 'opaque_iterator' : 'iterator';
-        }
-      } else if (data.constructor && data.constructor.name === 'RegExp') {
-        return 'regexp';
-      } else {
-        // $FlowFixMe[method-unbinding]
-        const toStringValue = Object.prototype.toString.call(data);
-        if (toStringValue === '[object Date]') {
-          return 'date';
-        } else if (toStringValue === '[object HTMLAllCollection]') {
-          return 'html_all_collection';
-        }
+        return iterator === data ? 'opaque_iterator' : 'iterator';
       }
-
-      if (!isPlainObject(data)) {
-        return 'class_instance';
-      }
-
-      return 'object';
+      if (data instanceof RegExp) return 'regexp';
+      if (data instanceof Date) return 'date';
+      const type = Object.prototype.toString.call(data);
+      return isPlainObject(data) ? 'object' : 'class_instance';
     case 'string':
       return 'string';
     case 'symbol':
       return 'symbol';
-    case 'undefined':
-      if (
-        // $FlowFixMe[method-unbinding]
-        Object.prototype.toString.call(data) === '[object HTMLAllCollection]'
-      ) {
-        return 'html_all_collection';
-      }
-      return 'undefined';
     default:
       return 'unknown';
   }
+}
+
+function isPlainObject(value) {
+  const objectProto = Object.getPrototypeOf({});
+  return (
+    Object.prototype.toString.call(value) === '[object Object]' &&
+    Object.getPrototypeOf(value) === objectProto
+  );
 }
 
 export function getDisplayNameForReactElement(
