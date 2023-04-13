@@ -557,90 +557,71 @@ export type DataType =
 /**
  * Get a enhanced/artificial type string based on the object instance
  */
-export function getDataType(data: Object): DataType {
+export function getObjectType(data) {
   if (data === null) {
     return 'null';
-  } else if (data === undefined) {
-    return 'undefined';
   }
-
-  if (isElement(data)) {
-    return 'react_element';
+  if (typeof data === 'bigint') {
+    return 'bigint';
   }
-
+  if (typeof data === 'boolean') {
+    return 'boolean';
+  }
+  if (typeof data === 'function') {
+    return 'function';
+  }
   if (typeof HTMLElement !== 'undefined' && data instanceof HTMLElement) {
     return 'html_element';
   }
-
-  const type = typeof data;
-  switch (type) {
-    case 'bigint':
-      return 'bigint';
-    case 'boolean':
-      return 'boolean';
-    case 'function':
-      return 'function';
-    case 'number':
-      if (Number.isNaN(data)) {
-        return 'nan';
-      } else if (!Number.isFinite(data)) {
-        return 'infinity';
-      } else {
-        return 'number';
-      }
-    case 'object':
-      if (isArray(data)) {
-        return 'array';
-      } else if (ArrayBuffer.isView(data)) {
-        return hasOwnProperty.call(data.constructor, 'BYTES_PER_ELEMENT')
-          ? 'typed_array'
-          : 'data_view';
-      } else if (data.constructor && data.constructor.name === 'ArrayBuffer') {
-        // HACK This ArrayBuffer check is gross; is there a better way?
-        // We could try to create a new DataView with the value.
-        // If it doesn't error, we know it's an ArrayBuffer,
-        // but this seems kind of awkward and expensive.
-        return 'array_buffer';
-      } else if (typeof data[Symbol.iterator] === 'function') {
-        const iterator = data[Symbol.iterator]();
-        if (!iterator) {
-          // Proxies might break assumptoins about iterators.
-          // See github.com/facebook/react/issues/21654
-        } else {
-          return iterator === data ? 'opaque_iterator' : 'iterator';
-        }
-      } else if (data.constructor && data.constructor.name === 'RegExp') {
-        return 'regexp';
-      } else {
-        // $FlowFixMe[method-unbinding]
-        const toStringValue = Object.prototype.toString.call(data);
-        if (toStringValue === '[object Date]') {
-          return 'date';
-        } else if (toStringValue === '[object HTMLAllCollection]') {
-          return 'html_all_collection';
-        }
-      }
-
-      if (!isPlainObject(data)) {
-        return 'class_instance';
-      }
-
-      return 'object';
-    case 'string':
-      return 'string';
-    case 'symbol':
-      return 'symbol';
-    case 'undefined':
-      if (
-        // $FlowFixMe[method-unbinding]
-        Object.prototype.toString.call(data) === '[object HTMLAllCollection]'
-      ) {
-        return 'html_all_collection';
-      }
-      return 'undefined';
-    default:
-      return 'unknown';
+  if (isElement(data)) {
+    return 'react_element';
   }
+  if (typeof data === 'number') {
+    if (isNaN(data)) {
+      return 'nan';
+    }
+    if (!isFinite(data)) {
+      return 'infinity';
+    }
+    return 'number';
+  }
+  if (typeof data === 'object') {
+    if (Array.isArray(data)) {
+      return 'array';
+    }
+    if (ArrayBuffer.isView(data)) {
+      return data.constructor?.BYTES_PER_ELEMENT ? 'typed_array' : 'data_view';
+    }
+    if (data.constructor?.name === 'ArrayBuffer') {
+      return 'array_buffer';
+    }
+    if (typeof data[Symbol.iterator] === 'function') {
+      const iterator = data[Symbol.iterator]();
+      if (iterator) {
+        return iterator === data ? 'opaque_iterator' : 'iterator';
+      }
+    }
+    if (data.constructor?.name === 'RegExp') {
+      return 'regexp';
+    }
+    if (data.constructor?.name === 'Date') {
+      return 'date';
+    }
+    if (isPlainObject(data)) {
+      return 'object';
+    }
+    if (Object.prototype.toString.call(data) === '[object HTMLAllCollection]') {
+      return 'html_all_collection';
+    }
+  }
+  if (typeof data === 'string') {
+    return 'string';
+  }
+  if (typeof data === 'symbol') {
+    return 'symbol';
+  }
+
+  return 'class_instance';
 }
 
 export function getDisplayNameForReactElement(
